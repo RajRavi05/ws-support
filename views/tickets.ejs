@@ -1,0 +1,144 @@
+<%- include('partials/header') %>
+
+<div class="admin-wrapper">
+  <%- include('partials/sidebar') %>
+
+  <main class="admin-tickets">
+    <h2>Tickets</h2>
+
+    <!-- Filter Section -->
+    <div class="filters">
+      <label for="status">Filter by Status</label>
+      <select id="status" onchange="filterTickets()">
+        <option value="all">All</option>
+        <option value="pending">Pending</option>
+        <option value="resolved">Resolved</option>
+      </select>
+    </div>
+
+    <!-- Tickets Table -->
+    <table id="ticketsTable">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Status</th>
+          <th>Created At</th>
+          <th>User</th>
+          <th>Mobile Number</th>
+          <th>Actions</th> <!-- Add a column for actions -->
+        </tr>
+      </thead>
+      <tbody id="ticketsTableBody">
+        <!-- Dynamic ticket rows will be inserted here via JavaScript -->
+      </tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    <div id="paginationControls">
+      <button id="prevPage" onclick="goToPreviousPage()" disabled>Previous</button>
+      <span id="pageNumber"></span>
+      <button id="nextPage" onclick="goToNextPage()" disabled>Next</button>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Declare global variables
+  let currentPage = 1;
+  let totalPages = 1;
+  const ticketsPerPage = 10;
+
+  // Fetch tickets and render them
+  async function fetchTickets(status = 'all', page = 1) {
+    currentPage = Number(page); // Ensure page is a number
+
+    const response = await fetch(`/api/tickets?status=${status}&page=${currentPage}&limit=${ticketsPerPage}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    const data = await response.json();
+    const ticketsTableBody = document.getElementById('ticketsTableBody');
+    ticketsTableBody.innerHTML = ''; // Clear previous rows
+
+    data.tickets.forEach(ticket => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+       
+        <td>${ticket.type}</td>
+        <td>${ticket.description}</td>
+        <td>${ticket.status}</td>
+        <td>${new Date(ticket.createdAt).toLocaleDateString()}</td>
+        <td>${ticket.userId.username}</td>
+        <td>${ticket.userId.mobileNumber}</td>
+        <td>
+          <select onchange="updateTicketStatus('${ticket._id}', this.value)">
+            <option value="pending" ${ticket.status === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="resolved" ${ticket.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+          </select>
+        </td>
+      `;
+      ticketsTableBody.appendChild(row);
+    });
+
+    // Update pagination controls
+    totalPages = data.totalPages;
+    currentPage = data.currentPage;
+    updatePaginationControls();
+  }
+
+  // Update pagination controls (Previous, Next, and Current Page)
+  function updatePaginationControls() {
+    document.getElementById('prevPage').disabled = currentPage === 1;
+    document.getElementById('nextPage').disabled = currentPage === totalPages;
+    document.getElementById('pageNumber').textContent = `Page ${currentPage} of ${totalPages}`;
+  }
+
+  // Go to the previous page
+  function goToPreviousPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      fetchTickets(document.getElementById('status').value, currentPage);
+    }
+  }
+
+  // Go to the next page
+  function goToNextPage() {
+    if (currentPage < totalPages) {
+      currentPage++;
+      fetchTickets(document.getElementById('status').value, currentPage);
+    }
+  }
+
+  // Update the ticket status
+  async function updateTicketStatus(ticketId, newStatus) {
+    const response = await fetch(`/api/tickets/${ticketId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    const data = await response.json();
+
+    if (response.ok) {
+      alert('Ticket status updated successfully');
+      fetchTickets(); // Re-fetch tickets to reflect the updated status
+    } else {
+      alert(data.message || 'Error updating ticket status');
+    }
+  }
+
+  // Filter tickets when dropdown value changes
+  function filterTickets() {
+    const status = document.getElementById('status').value;
+    fetchTickets(status);
+  }
+
+  // Initial load
+  fetchTickets();
+</script>
+
+<%- include('partials/footer') %>

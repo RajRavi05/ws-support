@@ -1,0 +1,241 @@
+<!-- /views/createTicket.ejs -->
+<%- include('partials/header') %>
+
+
+<style>
+ body {
+      min-height: 100vh;
+    
+      background: linear-gradient(45deg, #0f172a, #1e293b);
+    }
+    .ticket-form {
+      width: 100%;
+      max-width: 600px;
+      padding: 3rem;
+      
+      border-radius: 30px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.2);
+    }
+
+    .ticket-form::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        45deg,
+        transparent 20%,
+        rgba(59, 130, 246, 0.1) 35%,
+        rgba(147, 51, 234, 0.1) 65%,
+        transparent 80%
+      );
+      animation: rotate 20s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, #60a5fa, #8b5cf6, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+    }
+
+    .form-group {
+      position: relative;
+      margin-bottom: 2rem;
+      z-index: 1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.8rem;
+    
+      font-size: 1rem;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    select, textarea {
+      width: 100%;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.8);
+      border-radius: 15px;
+      
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 3rem;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+
+    select:focus + label, textarea:focus + label {
+      color: #3b82f6;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 1.25rem;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: #fff;
+      border: none;
+      border-radius: 15px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+      );
+      transition: 0.5s;
+    }
+
+    .submit-btn:hover::before {
+      left: 100%;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Decorative elements */
+    .ticket-form::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(
+        circle at top right,
+        rgba(139, 92, 246, 0.1),
+        transparent 60%
+      );
+      pointer-events: none;
+    }
+
+    /* Form validation styling */
+    select:invalid, textarea:invalid {
+      border-color: rgba(0, 0, 0, 0.8);
+    }
+
+    /* Responsive design */
+    @media (max-width: 640px) {
+      .ticket-form {
+        padding: 2rem;
+      }
+
+      h2 {
+        font-size: 2rem;
+      }
+
+      .submit-btn {
+        padding: 1rem;
+      }
+    }
+</style>
+
+<div class="ticket-form">
+  <h2>Create a Ticket</h2>
+  <form id="ticketForm">
+    <div class="form-group">
+      <label for="type">Ticket Type</label>
+      <select id="type" name="type" required>
+        <option value="I’m not able to open a book">I’m not able to open a book</option>
+        <option value="Need help in purchasing">Need help in purchasing</option>
+        <option value="Purchased a wrong book">Purchased a wrong book</option>
+        <option value="How to return">How to return</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="description">Issue Description</label>
+      <textarea id="description" name="description" required></textarea>
+    </div>
+    <button type="submit" class="submit-btn">Submit Ticket</button>
+  </form>
+</div>
+<script>
+    // Check if the user is logged in by looking for the token in localStorage
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login'; // Redirect to login page if no token
+    }
+  
+    // Add event listener for the form submission
+    document.getElementById('ticketForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+  
+      const type = document.getElementById('type').value;
+      const description = document.getElementById('description').value;
+      const token = localStorage.getItem('token'); // Get the token from localStorage
+  
+      try {
+        const response = await fetch('/api/tickets', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,  // Attach token in the Authorization header
+          },
+          body: JSON.stringify({ type, description }),
+        });
+  
+        const data = await response.json();
+  
+        if (response.ok) {
+          alert('Ticket created successfully');
+          window.location.href = '/'; // Redirect to homepage or dashboard after ticket creation
+        } else {
+          alert(data.message || 'Error creating ticket');
+        }
+      } catch (error) {
+        console.error(error);
+        alert('An error occurred while creating the ticket');
+      }
+    });
+  </script>
+<%- include('partials/footer') %>

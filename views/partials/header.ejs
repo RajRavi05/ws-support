@@ -1,0 +1,122 @@
+<!-- /views/partials/header.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Support Portal</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<header>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/login" id="login-link">Login</a></li>
+            <!-- If the user is logged in, show the "Admin Dashboard" and "Logout" links -->
+            <li><a href="/admin/dashboard" id="admin-dashboard-link" style="display: none;">Admin Dashboard</a></li>
+            <li><a href="#" id="logout-link" style="display: none;">Logout</a></li>
+        </ul>
+    </nav>
+</header>
+<!-- <audio id="notification-sound" preload="auto">
+    <source src="/audio/notification.mp3" type="audio/mp3">
+</audio> -->
+
+<audio id="myAudio">
+    <source src="/audio/notification.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+<div id="notification-container" style="display: none;">
+    <div id="notification-content">
+        <button id="close-notification" onclick="closeNotification()">×</button>
+        <h4 id="notification-title">New Ticket Created</h4>
+        <div>
+          <p><strong>Type: <span id="type"></span></strong></p>
+          <p><strong>Description: <span id="description"></span></strong></p>
+          <p><strong>ID: <span id="id"></span></strong></p>
+        </div>
+    </div>
+</div>
+<main>
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<script>
+
+
+    const audioElement = document.getElementById('notification-sound');
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role'); // Get the role from localStorage
+
+  // If a token is found, hide the login link and show the logout link
+  if (token) {
+    document.getElementById('login-link').style.display = 'none';
+    document.getElementById('logout-link').style.display = 'inline';
+
+    // Show the admin dashboard link only if the role is 'admin'
+    if (role === 'admin') {
+        var socket = io();
+        socket.on('new-ticket', (data) => {
+            console.log(data);
+            showNotification(data);
+        });
+      document.getElementById('admin-dashboard-link').style.display = 'inline';
+    }
+  }
+
+  // Handle logout
+  async function logout() {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        // Clear the token and role from localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        window.location.href = '/login'; // Redirect to the login page
+      } else {
+        alert('Error logging out');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred during logout');
+    }
+  }
+
+  document.getElementById('logout-link').addEventListener('click', logout);
+ 
+  function showNotification(data) {
+            const notificationContainer = document.getElementById('notification-container');
+            const notificationTitle = document.getElementById('notification-title');
+            const type = document.getElementById('type');
+            const description = document.getElementById('description');
+            const id = document.getElementById('id');
+            const myAudio = document.getElementById('myAudio');
+
+            // Set the content of the notification
+            notificationTitle.textContent = data.title;
+            type.textContent = data.type;
+            description.textContent = data.description;
+            id.textContent = data.id;
+
+            // Show the notification container with animation
+            notificationContainer.style.display = 'block';
+            notificationContainer.style.opacity = 1;
+            myAudio.play()
+        }
+
+        function closeNotification() {
+            const notificationContainer = document.getElementById('notification-container');
+            notificationContainer.style.opacity = 0;
+            setTimeout(() => {
+                notificationContainer.style.display = 'none';
+            }, 500); // Ensure notification is hidden after the fade out
+        }
+</script>
+
+</main>
+</body>
+</html>

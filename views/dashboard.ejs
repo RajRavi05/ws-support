@@ -1,0 +1,50 @@
+<!-- /views/admin/dashboard.ejs -->
+<%- include('partials/header') %>
+
+
+<div class="admin-wrapper">
+    <%- include('partials/sidebar') %>
+    <main class="admin-dashboard">
+        <div class="dashboard-stats">
+          <div class="stat-card">
+            <h3>Total Tickets</h3>
+            <p id="totalTickets">Loading...</p>
+          </div>
+          <div class="stat-card">
+            <h3>Tickets Resolved</h3>
+            <p id="resolvedTickets">Loading...</p>
+          </div>
+          <div class="stat-card">
+            <h3>Active Tickets</h3>
+            <p id="activeTickets">Loading...</p>
+          </div>
+        </div>
+      </main>
+</div>
+
+
+
+
+<script>
+  // Function to fetch dashboard data
+  async function fetchDashboardData() {
+    const response = await fetch('/api/admin/dashboard', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    const data = await response.json();
+
+    if (response.ok) {
+      // Update the UI with the fetched data
+      document.getElementById('totalTickets').textContent = data.totalTickets;
+      document.getElementById('resolvedTickets').textContent = data.resolvedTickets;
+      document.getElementById('activeTickets').textContent = data.pendingTickets;
+    } else {
+      alert(data.message || 'Error fetching dashboard data');
+    }
+  }
+
+  // Initial load
+  fetchDashboardData();
+</script>
